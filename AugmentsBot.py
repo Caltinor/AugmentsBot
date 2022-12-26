@@ -48,4 +48,24 @@ async def cmd_add_info(ctx :commands.Context):
 async def cmd_add_compat(ctx :commands.Context):
     await ctx.interaction.response.send_modal(Modals.CompatModal())
 
+@client.hybrid_command(name="bug_report")
+async def cmd_issue(ctx :commands.Context, mod_id :str):
+    switch={
+        "pmmo":"Project-MMO-2.0",
+        "bot": "AugmentsBot"
+    }
+    projectID = switch.get(mod_id, None)
+
+    await (ctx.interaction.response.send_modal(Modals.IssueModal(projectID=projectID)) \
+        if projectID != None \
+        else ctx.interaction.response.send_message("This mod is not configured for bug reporting", ephemeral=True))
+
+@client.hybrid_command(name="info_keywords")
+async def cmd_list(ctx :commands.Context, mod_id :str, filter :str = "%"):
+    await ctx.interaction.response.send_message(Database.list_info(mod_id, filter), ephemeral=True)
+
+@client.hybrid_command(name="compat_keywords")
+async def cmd_list(ctx :commands.Context, mod_id :str, filter :str = "%"):
+    await ctx.interaction.response.send_message(Database.list_compat(mod_id, filter), ephemeral=True)
+
 client.run(token)
