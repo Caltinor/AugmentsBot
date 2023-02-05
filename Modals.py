@@ -74,7 +74,7 @@ class InfoModal(discord.ui.Modal, title='Info Entry Form'):
     img = discord.ui.TextInput(
         label="image to embed",
         style=discord.TextStyle.short,
-        required=True
+        required=False
     )
 
     async def on_submit(self, interaction :discord.Interaction, /) -> None:

@@ -18,7 +18,9 @@ def get_info_formatted(modID :str, keyword :str, filter :str):
     results = get_info(modID, keyword, filter)
     formatted_lines = []
     for result in results:
-        embed = discord.Embed(title=f"{keyword} for {modID} version {result[1]}:", description=result[0], color=discord.Color.blue()).set_image(url=result[2])
+        embed = discord.Embed(title=f"{keyword} for {modID} version {result[1]}:", description=result[0], color=discord.Color.blue())
+        if result[2] == None or len(result[2]) > 0:
+            embed.set_image(url=result[2])
         formatted_lines.append(embed)
     return formatted_lines if len(formatted_lines) > 0 else [discord.Embed(title='This keyword has no associated documentation')]
 
@@ -38,7 +40,9 @@ def get_compat_formatted(mod_a :str, mod_b :str, filter :str):
     results = get_compat(mod_a=mod_a, mod_b=mod_b, filter=filter)
     formatted_lines = []
     for result in results:
-        embed = discord.Embed(title=f"{mod_a} compat with {mod_b} for version {result[1]}:", description=result[0], color=discord.Color.yellow()).set_image(url=result[2])
+        embed = discord.Embed(title=f"{mod_a} compat with {mod_b} for version {result[1]}:", description=result[0], color=discord.Color.yellow())
+        if result[2] == None or len(result[2]) > 0:
+            embed.set_image(url=result[2])
         formatted_lines.append(embed)
     return formatted_lines if len(formatted_lines) > 0 else [discord.Embed(title='No incompatibilities have been reported for these mods and version.')]
 
