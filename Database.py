@@ -11,8 +11,8 @@ cursor.executescript(open('table_definitions.sql', 'r').read())
 print("Tables constructed if absent")
 
 def get_info(modID :str, keyword :str, filter :str):
-    sql = f'SELECT message_body, mod_version, embed_image FROM info WHERE cmdroot = "{modID}" AND keyword = "{keyword}" AND mod_version LIKE "%{filter}%";'
-    return cursor.execute(sql).fetchall()
+    sql = 'SELECT message_body, mod_version, embed_image FROM info WHERE cmdroot = ? AND keyword = ? AND mod_version LIKE ?;'
+    return cursor.execute(sql, (modID, keyword, f'%{filter}%')).fetchall()
 
 def get_info_formatted(modID :str, keyword :str, filter :str):
     results = get_info(modID, keyword, filter)
@@ -25,16 +25,18 @@ def get_info_formatted(modID :str, keyword :str, filter :str):
     return formatted_lines if len(formatted_lines) > 0 else [discord.Embed(title='This keyword has no associated documentation')]
 
 def set_info(modID :str, keyword :str, version :str, message :str, img :str):
-    insert_sql = f'INSERT INTO info (cmdroot, keyword, mod_version, message_body, embed_image) VALUES("{modID}","{keyword}","{version}","{message}", "{img}");'
-    update_sql = f'UPDATE info SET message_body = "{message}", embed_image = "{img}" WHERE cmdroot = "{modID}" AND keyword = "{keyword}" AND mod_version = "{version}";'
+    insert_sql = 'INSERT INTO info (cmdroot, keyword, mod_version, message_body, embed_image) VALUES(?,?,?,?,?);'
+    update_sql = 'UPDATE info SET message_body = ?, embed_image = ? WHERE cmdroot = ? AND keyword = ? AND mod_version = ?;'
     results = get_info(modID=modID, keyword=keyword, filter=version)
-    final_sql = update_sql if len(results) > 0 else insert_sql
-    connection.execute(final_sql)
+    if len(results) > 0:
+        connection.execute(update_sql, (message, img, modID, keyword, version))
+    else:
+        connection.execute(insert_sql, (modID, keyword, version, message, img)) 
     connection.commit()
 
 def get_compat(mod_a :str, mod_b :str, filter :str):
-    sql = f'SELECT message_body, mod_a_version, embed_image FROM compat WHERE mod_a = "{mod_a}" AND mod_b = "{mod_b}" AND mod_a_version LIKE "%{filter}%";'
-    return cursor.execute(sql).fetchall()    
+    sql = 'SELECT message_body, mod_a_version, embed_image FROM compat WHERE mod_a = ? AND mod_b = ? AND mod_a_version LIKE ?;'
+    return cursor.execute(sql, (mod_a, mod_b, f'%{filter}%')).fetchall()    
 
 def get_compat_formatted(mod_a :str, mod_b :str, filter :str):
     results = get_compat(mod_a=mod_a, mod_b=mod_b, filter=filter)
@@ -47,25 +49,29 @@ def get_compat_formatted(mod_a :str, mod_b :str, filter :str):
     return formatted_lines if len(formatted_lines) > 0 else [discord.Embed(title='No incompatibilities have been reported for these mods and version.')]
 
 def set_compat(mod_a :str, mod_b :str, version :str, message :str, img :str):
-    insert_sql = f'INSERT INTO compat (mod_a, mod_b, message_body, mod_a_version, embed_image) VALUES("{mod_a}","{mod_b}","{message}","{version}", "{img}");'
-    update_sql = f'UPDATE compat SET message_body = "{message}", embed_image = "{img}" WHERE mod_a = "{mod_a}" AND mod_b = "{mod_b}" AND mod_a_version = "{version}";'
+    insert_sql = 'INSERT INTO compat (mod_a, mod_b, message_body, mod_a_version, embed_image) VALUES("?,?,?,?,?);'
+    update_sql = 'UPDATE compat SET message_body = ?, embed_image = ? WHERE mod_a = ? AND mod_b = ? AND mod_a_version = ?;'
     results = get_compat(mod_a=mod_a, mod_b=mod_b, filter=version)
-    final_sql = update_sql if len(results) > 0 else insert_sql
-    connection.execute(final_sql)
+    if len(results) > 0:
+        connection.execute(update_sql, (message, img, mod_a, mod_b, version))
+    else:
+        connection.execute(insert_sql, (mod_a, mod_b, message, version, img))
     connection.commit()
 
 def list_info(modID :str, filter :str):
-    sql = f'SELECT keyword FROM info WHERE cmdroot = "{modID}" AND mod_version LIKE "%{filter}%";'
-    keywordList = cursor.execute(sql).fetchall()
-    items = ""
+    sql = 'SELECT keyword, mod_version FROM info WHERE cmdroot = ? AND mod_version LIKE ?;'
+    keywordList = cursor.execute(sql, (modID, f'%{filter}%')).fetchall()
+    items = []
     for item in keywordList:
-        items += item[0] + ", "
-    return items if items.__len__() > 0 else "No Keywords."
+        items.append(f'`{item[0]}`({item[1]})')
+    items.sort()
+    return "\n".join(items) if len(items) > 0 else "No Keywords."
 
 def list_compat(mod_a :str, filter :str):
-    sql = f'SELECT mod_b FROM compat WHERE mod_a = "{mod_a}" AND mod_a_version LIKE "%{filter}%";'
-    keywordList = cursor.execute(sql).fetchall()
-    items = ""
+    sql = f'SELECT mod_b, mod_a_version FROM compat WHERE mod_a = ? AND mod_a_version LIKE ?;'
+    keywordList = cursor.execute(sql, (mod_a, f'%{filter}%')).fetchall()
+    items = []
     for item in keywordList:
-        items += item[0] + ", "
-    return items if items.__len__() > 0 else "No Keywords."
+        items.append(f'`{item[0]}`({item[1]})')
+    items.sort()
+    return "\n".join(items) if len(items) > 0 else "No Keywords."
