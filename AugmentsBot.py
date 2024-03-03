@@ -31,6 +31,10 @@ async def on_message(message):
 @client.hybrid_command(name="info")
 async def cmd_info(ctx :commands.Context, mod_id :str, keyword :str, version_filter :str = '%'):
     for response in Database.get_info_formatted(modID=mod_id, keyword=keyword, filter=version_filter):
+        if not response.description:
+            #Catches "This keyword has no associated documentation" messages
+            await ctx.send(embed=response, ephemeral=True)
+            return
         await ctx.send(embed=response)
 
 @client.hybrid_command(name="compat")
