@@ -72,4 +72,34 @@ async def cmd_list(ctx :commands.Context, mod_id :str, filter :str = "%"):
 async def cmd_list(ctx :commands.Context, mod_id :str, filter :str = "%"):
     await ctx.interaction.response.send_message(Database.list_compat(mod_id, filter), ephemeral=True)
 
+@client.event
+async def on_raw_reaction_add(msg) -> None:  # Using "raw" so that if the bot gets restarted, older messages can be removed.
+    assert msg  # Aborts for days...
+    assert msg.emoji.is_unicode_emoji()
+    assert msg.emoji.name == "🚫"
+    channel = await get_channel_from_id(msg.channel_id)
+    member = await get_member_from_id(msg.user_id, channel.guild)
+    assert member is not None 
+    assert channel is not None
+    message = await channel.fetch_message(msg.message_id)
+    assert message is not None
+    if not valid_message_deletion(message, member):
+        return
+    await message.delete()
+    
+async def get_member_from_id(user_id, guild: discord.Guild):  # Attempts to use cache, but will make an API call if that fails.
+    member = guild.get_member(user_id)
+    return member if member is not None else await guild.fetch_member(user_id)
+
+async def get_channel_from_id(channel_id):  # Attempts to use cache, but will make an API call if that fails.
+    channel = client.get_channel(channel_id)
+    return channel if channel is not None else await client.fetch_channel(channel_id)
+
+def valid_message_deletion(message: discord.Message, member: discord.Member):  # Validates if a member has permission to delete the message.
+    if message.channel.permissions_for(member).manage_messages:  # Does the member have "manage messages" permission.
+        return True
+    if hasattr(message, "interaction_metadata") and message.interaction_metadata.user.id == member.id:  # Did the member trigger the command.
+        return True
+    return False
+
 client.run(token)
