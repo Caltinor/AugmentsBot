@@ -29,21 +29,21 @@ async def on_message(message):
     #print(f'Message from {message.author}: {message.content}')
 
 @client.hybrid_command(name="info")
-async def cmd_info(ctx :commands.Context, mod_id :str, keyword :str, version_filter :str = '%', target_user :discord.Member = None):
+async def cmd_info(ctx :commands.Context, mod_id :str, keyword :str, version_filter :str = '%', target_user :discord.Member = None, private: bool = False):
     msg :str = target_user.mention if target_user is not None else None
     for response in Database.get_info_formatted(modID=mod_id, keyword=keyword, filter=version_filter):
         if not response.description:
             #Catches "This keyword has no associated documentation" messages
             await ctx.send(embed=response, ephemeral=True)
             return
-        await ctx.send(content=msg, embed=response)
+        await ctx.send(content=msg, embed=response, ephemeral=private)
         msg = None
 
 @client.hybrid_command(name="compat")
-async def cmd_compat(ctx :commands.Context, mod_a :str, mod_b :str, version_filter :str = '%', target_user :discord.Member = None):
+async def cmd_compat(ctx :commands.Context, mod_a :str, mod_b :str, version_filter :str = '%', target_user :discord.Member = None, private: bool = False):
     msg :str = target_user.mention if target_user is not None else None
     for response in Database.get_compat_formatted(mod_a=mod_a,mod_b=mod_b,filter=version_filter):
-        await ctx.send(content=msg, embed=response)
+        await ctx.send(content=msg, embed=response, ephemeral=private)
         msg = None
 
 @client.hybrid_command(name='add_info')
