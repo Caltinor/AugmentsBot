@@ -19,7 +19,10 @@ class Publish(discord.ui.View):
     async def publish_click_interaction(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.clear_items()  # Remove all elements from the View
         await interaction.response.edit_message(embeds=interaction.message.embeds, content=interaction.message.content, view=self)  # Update the triggering message
-        await interaction.followup.send(embeds=interaction.message.embeds, content=interaction.message.content)  # Send new message
+        embeds = interaction.message.embeds
+        if embeds:
+            embeds[0].add_field(name="From", value=interaction.user.mention)
+        await interaction.followup.send(embeds=embeds, content=interaction.message.content)  # Send new message
 
 @client.event
 async def on_ready():
