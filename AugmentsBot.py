@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import Database
 import Modals
+import Views
 
 tokenFile = open("token.txt", 'r')
 token = tokenFile.readline()
@@ -13,16 +14,6 @@ intents.typing = True
 intents.messages = True
 
 client = commands.Bot(command_prefix='/', intents=intents)
-
-class Publish(discord.ui.View):
-    @discord.ui.button(label='Publish', style=discord.ButtonStyle.gray)
-    async def publish_click_interaction(self, interaction: discord.Interaction, button: discord.ui.Button):
-        self.clear_items()  # Remove all elements from the View
-        await interaction.response.edit_message(embeds=interaction.message.embeds, content=interaction.message.content, view=self)  # Update the triggering message
-        embeds = interaction.message.embeds
-        if embeds:
-            embeds[0].add_field(name="From", value=interaction.user.mention)
-        await interaction.followup.send(embeds=embeds, content=interaction.message.content)  # Send new message
 
 @client.event
 async def on_ready():
@@ -47,7 +38,7 @@ async def cmd_info(ctx :commands.Context, mod_id :str, keyword :str, version_fil
             await ctx.send(embed=response, ephemeral=True)
             return
         if preview:
-            view = Publish()  # Make a new view (that contains a Publish button)
+            view = Views.Publish()  # Make a new view (that contains a Publish button)
             await ctx.send(content=msg, embed=response, ephemeral=True, view=view)
         else:
             await ctx.send(content=msg, embed=response)
@@ -58,7 +49,7 @@ async def cmd_compat(ctx :commands.Context, mod_a :str, mod_b :str, version_filt
     msg :str = target_user.mention if target_user is not None else None
     for response in Database.get_compat_formatted(mod_a=mod_a,mod_b=mod_b,filter=version_filter):
         if preview:
-            view = Publish()  # Make a new view (that contains a Publish button)
+            view = Views.Publish()  # Make a new view (that contains a Publish button)
             await ctx.send(content=msg, embed=response, ephemeral=True, view=view)
         else:
             await ctx.send(content=msg, embed=response)
