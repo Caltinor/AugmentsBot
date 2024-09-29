@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+import os
 import Database
 import Modals
 
@@ -58,6 +59,9 @@ async def cmd_add_compat(ctx :commands.Context):
 
 @client.hybrid_command(name="bug_report")
 async def cmd_issue(ctx :commands.Context, mod_id :str):
+    if not os.path.exists("ghtoken.txt"):
+        return await ctx.interaction.response.send_message("This mod is not configured for bug reporting", ephemeral=True)
+
     switch={
         "pmmo":"Project-MMO-2.0",
         "bot": "AugmentsBot"
@@ -66,7 +70,7 @@ async def cmd_issue(ctx :commands.Context, mod_id :str):
 
     await (ctx.interaction.response.send_modal(Modals.IssueModal(projectID=projectID)) \
         if projectID != None \
-        else ctx.interaction.response.send_message("This mod is not configured for bug reporting", ephemeral=True))
+        else await ctx.interaction.response.send_message("This mod is not configured for bug reporting", ephemeral=True))
 
 @client.hybrid_command(name="info_keywords")
 async def cmd_list(ctx :commands.Context, mod_id :str, filter :str = "%"):
