@@ -1,12 +1,15 @@
 import requests
 import json
 
-tokenFile = open("ghtoken.txt", 'r')
-token = tokenFile.readline()
-tokenFile.close()
+try:
+    tokenFile = open("ghtoken.txt", 'r')
+    token = tokenFile.readline()
+    tokenFile.close()
 
-headers = {"Authorization" : f"Bearer {token}",
-    "Accept": "application/vnd.github+json"}
+    headers = {"Authorization" : f"Bearer {token}",
+        "Accept": "application/vnd.github+json"}
+except FileNotFoundError:
+    print("ghtoken.txt not found!")
 
 def createIssue(Repositoryname : str, title :str, body :str):
     data = {"title": title, "body": body}
