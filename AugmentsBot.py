@@ -3,6 +3,7 @@ from discord.ext import commands
 import os
 import Database
 import Modals
+import Views
 
 tokenFile = open("token.txt", 'r')
 token = tokenFile.readline()
@@ -30,21 +31,29 @@ async def on_message(message):
     #print(f'Message from {message.author}: {message.content}')
 
 @client.hybrid_command(name="info")
-async def cmd_info(ctx :commands.Context, mod_id :str, keyword :str, version_filter :str = '%', target_user :discord.Member = None):
+async def cmd_info(ctx :commands.Context, mod_id :str, keyword :str, version_filter :str = '%', target_user :discord.Member = None, preview: bool = False):
     msg :str = target_user.mention if target_user is not None else None
     for response in Database.get_info_formatted(modID=mod_id, keyword=keyword, filter=version_filter):
         if not response.description:
             #Catches "This keyword has no associated documentation" messages
             await ctx.send(embed=response, ephemeral=True)
             return
-        await ctx.send(content=msg, embed=response)
+        if preview:
+            view = Views.Publish()  # Make a new view (that contains a Publish button)
+            await ctx.send(content=msg, embed=response, ephemeral=True, view=view)
+        else:
+            await ctx.send(content=msg, embed=response)
         msg = None
 
 @client.hybrid_command(name="compat")
-async def cmd_compat(ctx :commands.Context, mod_a :str, mod_b :str, version_filter :str = '%', target_user :discord.Member = None):
+async def cmd_compat(ctx :commands.Context, mod_a :str, mod_b :str, version_filter :str = '%', target_user :discord.Member = None, preview: bool = False):
     msg :str = target_user.mention if target_user is not None else None
     for response in Database.get_compat_formatted(mod_a=mod_a,mod_b=mod_b,filter=version_filter):
-        await ctx.send(content=msg, embed=response)
+        if preview:
+            view = Views.Publish()  # Make a new view (that contains a Publish button)
+            await ctx.send(content=msg, embed=response, ephemeral=True, view=view)
+        else:
+            await ctx.send(content=msg, embed=response)
         msg = None
 
 @client.hybrid_command(name='add_info')
